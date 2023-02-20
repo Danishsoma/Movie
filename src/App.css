@@ -1,3 +1,32 @@
+* {
+  background-color: azure;
+  box-sizing: border-box;
+  margin:auto;
+}
 .container {
-  
+    margin: 15%;
+    margin-top: 2%;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    flex-wrap: wrap;
+    border: 1px solid black;
+
+}
+
+.item {
+    flex-basis: calc(30% - 12px); 
+    margin: 10px;
+
+}
+
+.card-image {
+    height: auto;
+    max-width: 100%;
+    vertical-align: middle;
+}
+
+.heading {
+    text-decoration: none;
+    font-size: 15px;
 }
