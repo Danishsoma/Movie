@@ -1,4 +1,4 @@
-import React , {useState,useContext,useEffect, Children } from "react";
+import React, { useState, useContext, useEffect, Children } from "react";
 import axios from "axios";
 
 export const API_ENDPOINT = `https://www.omdbapi.com/?apikey=8d837906`;
@@ -6,59 +6,98 @@ export const API_ENDPOINT = `https://www.omdbapi.com/?apikey=8d837906`;
 
 const AppContext = React.createContext()
 
-const AppProvider = ({children}) => {
-  
-   const [isLoading,setIsLoading] = useState(false);
-   const [isError,setIsError] = useState(false);
-   const [data,setData] = useState([]);
-   const [query,setQuery] = useState({searchTxt:"Dabangg"});
-   const [filteredData, setFilteredData] = useState([])
-  
-   const fetchData = async (url) => {
-       try{
-        setIsError(false)
-        setIsLoading(true)
-        const resp = await axios.get(url);
-        setIsError(false)
-   
-        if(resp.data.Response === 'True'){
-            setData(resp.data.Search)
-            setFilteredData(resp.data.Search)
-        }
-        else{
-            setData([])
-            setIsError(true)
-        }
-        setIsLoading(false)
-       }
+const AppProvider = ({ children }) => {
 
-       catch(error){
-        console.log(error);
-       }
-        
-      
-   }
+  const [isLoading, setIsLoading] = useState(false);
+  const [isError, setIsError] = useState(false);
+  const [data, setData] = useState([]);
+  const [query, setQuery] = useState({ searchTxt: "China" });
+  const [filteredData, setFilteredData] = useState([]);
 
-   const movieFilter = (movie)=>{
-      if((query.searchTxt?movie.Title.indexOf(query.searchTxt) != -1:true) && (query.year?query.year == movie.Year:true) )
-      {
-          return true
+
+  const fetchData = async (url) => {
+    try {
+      setIsError(false)
+      setIsLoading(true)
+      const resp = await axios.get(url);
+      setIsError(false)
+      if (resp.data.Response === 'True') {
+        let sortedData = sortedDataFunction(resp.data.Search);
+        setData(sortedData)
+        setFilteredData(fitlterData(sortedData))
+      }
+      else {
+        setData([])
+        setFilteredData([])
+        setIsError(true)
+      }
+      setIsLoading(false)
+    }
+
+    catch (error) {
+      console.log(error);
+    }
+  }
+
+  function sortedDataFunction(data){
+    const sortedData =data.sort((a, b) => {
+      return parseInt(a.Year) - parseInt( b.Year);
+    });
+
+    return sortedData;
+  }
+
+
+
+  function fitlterData(data) {
+
+    const filteredData = data.filter((movie) => {
+      if(!query.year){
+        return data;
+      }
+
+      if(query.year === 'select Year'){
+        return data;
+      }
+      let value = query.year.split("-")
+      let min = value[0];
+      let max = value[1];
+      if ((query.searchTxt ? movie.Title.indexOf(query.searchTxt) != -1 : true) && (value ? (movie.Year > min && movie.Year <= max) : true)) {
+        return true
       }
 
       return false;
-   }
+    });
 
-   useEffect( () => {
-    let filteredData = data.filter((movie)=>movieFilter(movie))
-    setFilteredData(filteredData);
-   },[query])
+    const sortedData =sortedDataFunction(filteredData);
 
-   useEffect(()=>{
+    return sortedData;
+
+  }
+
+  useEffect(() => {
+    if(data){
+      let filteredData = fitlterData(data);
+      console.log("filteredData",filteredData)
+      if (filteredData.length == 0) {
+        setIsError(true)
+        setFilteredData([])
+      } else {
+        setIsError(false)
+        setFilteredData(filteredData);
+      }
+
+    }
+
+  }, [query])
+
+  useEffect(() => {
     fetchData(`${API_ENDPOINT}&s=${query.searchTxt}`)
-   },[query.searchTxt])
+  }, [query.searchTxt])
 
 
-return (
+
+  return (
     <AppContext.Provider
       value={{ isLoading, isError, data, filteredData, query, setQuery }}
     >
@@ -69,8 +108,7 @@ return (
 
 
 export const useGlobalContext = () => {
-    return useContext(AppContext);
-  };
-  
+  return useContext(AppContext);
+};
+
 export { AppContext, AppProvider };
-  
