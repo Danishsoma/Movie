@@ -11,17 +11,19 @@ const AppProvider = ({children}) => {
    const [isLoading,setIsLoading] = useState(false);
    const [isError,setIsError] = useState(false);
    const [data,setData] = useState([]);
-   const [query,setQuery] = useState("all");
+   const [query,setQuery] = useState({searchTxt:"Dabangg"});
+   const [filteredData, setFilteredData] = useState([])
   
    const fetchData = async (url) => {
        try{
-        
+        setIsError(false)
         setIsLoading(true)
         const resp = await axios.get(url);
         setIsError(false)
    
         if(resp.data.Response === 'True'){
             setData(resp.data.Search)
+            setFilteredData(resp.data.Search)
         }
         else{
             setData([])
@@ -36,14 +38,29 @@ const AppProvider = ({children}) => {
         
       
    }
+
+   const movieFilter = (movie)=>{
+      if((query.searchTxt?movie.Title.indexOf(query.searchTxt) != -1:true) && (query.year?query.year == movie.Year:true) )
+      {
+          return true
+      }
+
+      return false;
+   }
+
    useEffect( () => {
-    fetchData(`${API_ENDPOINT}&s=${query}`)
+    let filteredData = data.filter((movie)=>movieFilter(movie))
+    setFilteredData(filteredData);
    },[query])
+
+   useEffect(()=>{
+    fetchData(`${API_ENDPOINT}&s=${query.searchTxt}`)
+   },[query.searchTxt])
 
 
 return (
     <AppContext.Provider
-      value={{ isLoading, isError, data, query, setQuery }}
+      value={{ isLoading, isError, data, filteredData, query, setQuery }}
     >
       {children}
     </AppContext.Provider>
